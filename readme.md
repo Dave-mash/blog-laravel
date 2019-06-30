@@ -1,6 +1,6 @@
 # laravel blog
 
-A simple laravel blog
+A simple car classified API
 
 ## Prerequisites
 
