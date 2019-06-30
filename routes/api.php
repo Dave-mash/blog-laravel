@@ -16,3 +16,11 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/', function() {
+    $person = [
+        'first_name' => 'Sean',
+        'last_name' => 'Paul'
+    ];
+    return $person;
+});
