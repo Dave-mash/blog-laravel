@@ -1,4 +1,4 @@
-# laravel blog
+# Madinga API
 
 A simple car classified API
 
