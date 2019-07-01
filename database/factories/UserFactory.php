@@ -18,10 +18,14 @@ use Faker\Generator as Faker;
 
 $factory->define(User::class, function (Faker $faker) {
     return [
-        'name' => $faker->name,
+        'firstName' => $faker->text(10),
+        'lastName' => $faker->text(10),
+        'username' => $faker->name,
         'email' => $faker->unique()->safeEmail,
         'email_verified_at' => now(),
+        'phoneNumber' => $faker->integer(15),
         'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+        'isAdmin' => $faker->boolean('false'),
         'remember_token' => Str::random(10),
     ];
 });
