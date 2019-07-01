@@ -15,11 +15,11 @@ class CreateUsersTable extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
+            $table->increments('id');
             $table->string('firstName');
             $table->string('lastName');
-            $table->string('username')->unique();
             $table->string('email')->unique();
-            $table->integer('phoneNumber');
+            $table->bigInteger('phoneNumber');
             $table->string('password');
             $table->boolean('isAdmin')->default(false);
             $table->rememberToken()->default(Str::random(10));
@@ -34,6 +34,8 @@ class CreateUsersTable extends Migration
      */
     public function down()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
         Schema::dropIfExists('users');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 }

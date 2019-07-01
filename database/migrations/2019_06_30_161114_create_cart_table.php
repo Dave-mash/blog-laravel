@@ -13,17 +13,31 @@ class CreateCartTable extends Migration
      */
     public function up()
     {
-        Schema::create('cart', function (Blueprint $table) {
-            $table->foreign('user_id')
+        Schema::create('checkout', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('buyer_id')->unsigned()->nullable();
+            $table->integer('vendor_id')->unsigned()->nullable();
+            $table->integer('car_id')->unsigned()->nullable();
+            $table->timestamps();
+
+            $table->foreign('vendor_id')
                 ->references('id')
                 ->on('users')
                 ->onDelete('cascade');
+
+            $table->foreign('buyer_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+
             $table->foreign('car_id')
                 ->references('id')
                 ->on('cars')
                 ->onDelete('cascade');
-            $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
+        // Schema::rename('carts', 'checkout');
     }
 
     /**
@@ -33,6 +47,8 @@ class CreateCartTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('cart');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        Schema::dropIfExists('checkout');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 }

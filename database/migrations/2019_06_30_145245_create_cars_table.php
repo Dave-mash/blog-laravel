@@ -14,10 +14,8 @@ class CreateCarsTable extends Migration
     public function up()
     {
         Schema::create('cars', function (Blueprint $table) {
-            $table->foreign('vendor_id')
-                ->references('id')
-                ->on('users')
-                ->onDelete('cascade');
+            $table->increments('id');
+            $table->integer('vendor_id')->unsigned()->nullable();
             $table->string('make');
             $table->string('model');
             $table->string('color');
@@ -26,6 +24,14 @@ class CreateCarsTable extends Migration
             $table->integer('price');
             $table->string('picture');
             $table->boolean('purchased')->default(false);
+            $table->timestamps();
+            
+            $table->foreign('vendor_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+
+            $table->engine = 'InnoDB';
         });
     }
 
@@ -36,6 +42,8 @@ class CreateCarsTable extends Migration
      */
     public function down()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
         Schema::dropIfExists('cars');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 }

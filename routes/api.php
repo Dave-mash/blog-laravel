@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 
+use App\User;
+use App\Car;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,10 +20,18 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/', function() {
-    $person = [
-        'first_name' => 'Sean',
-        'last_name' => 'Paul'
-    ];
-    return $person;
-});
+// fetch all cars
+Route::get('/cars', 'CarController@index');
+
+// fetch single car
+Route::get('/cars{id}', 'CarController@show');
+
+// create new car
+Route::post('/car', 'CarController@store');
+
+// update car
+Route::put('/car{id}', 'CarController@update');
+
+// delete a car
+Route::delete('/car{id}', 'CarController@destroy');
+
