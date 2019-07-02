@@ -33,14 +33,14 @@ A simple car classified API
 
 ### Features
 
-- [ ] A user should be able to create an account.
+- [x] A user should be able to create an account.
 - [ ] A user should be able to log in to their account.
 - [ ] A vendor should be able to log in to an admin dashboard.
 - [x] A user should be able to get all cars.
 - [ ] A user should be able to add a car to the cart.
-- [ ] A user should be able to post a car for sale.
+- [x] A user should be able to post a car for sale.
 - [ ] A vendor should be able to update car features.
-- [ ] A vendor should be able to delete a car entry.
+- [x] A vendor should be able to delete a car entry.
 - [ ] A vendor should be able to update their profile.
 - [ ] A vendor should be able to get their posted cars list.
 - [ ] A vendor should be able to get all purchased cars.

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Car;
+use App\User;
 use App\Http\Resources\Car as CarResource;
 
 class CarController extends Controller
@@ -28,15 +29,36 @@ class CarController extends Controller
      */
     public function store(Request $request, $id)
     {
-        $car = new Car;
-        $car->vendor_id = $id;
-        $car->make = $request->input('make');
-        $car->model = $request->input('model');
-        $car->color = $request->input('color');
-        $car->description = $request->input('description');
-        $car->condition = $request->input('condition');
-        $car->price = $request->input('price');
-        $car->picture = $request->input('picture');
+        $userId = User::findOrFail($id);
+        if ($userId) {
+            $picture = $request->input('picture');
+            $car = new Car;
+            $car->vendor_id = $id;
+            $car->make = $request->input('make');
+            $car->model = $request->input('model');
+            $car->color = $request->input('color');
+            $car->description = $request->input('description');
+            $car->condition = $request->input('condition');
+            $car->price = $request->input('price');
+
+            if ($car->save()) {
+                $newCar = new CarResource($car);
+                return [
+                    'message' => 'Car posted successfully',
+                    'status' => 201,
+                    'car' => $newCar
+                ];
+            } else {
+                return [
+                    'status' => 400
+                ];
+            }
+        } else {
+            return [
+                'error' => 'Please create an account first',
+                'status' => 401
+            ];
+        }
     }
 
     /**
@@ -52,26 +74,68 @@ class CarController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $vendorId, $carId)
     {
-        //
+        if (!Car::find($carId)) {
+            return [
+                'error' => 'Car does not exist',
+                'status' => 404
+            ];
+        }
+
+        if (!User::find($vendorId)) {
+            return [
+                'error' => 'Please create an account first',
+                'status' => 403
+            ];
+        }
+
+        $carObj = Car::findOrFail($carId);
+        $user = User::findOrFail($vendorId);
+        if ($user->id == $carObj->vendor_id) {
+
+            $car = new Car;
+
+            $make = $request->input('make');
+            $model = $request->input('model');
+            $color = $request->input('color');
+            $description = $request->input('description');
+            $condition = $request->input('condition');
+            $price = $request->input('price');
+            $picture = $request->input('picture');
+
+            $make ? $car->make = $make : $car->make = $car->make;
+            $model ? $car->model = $model : $car->model = $car->model;
+            $color ? $car->color = $color : $car->color = $car->color;
+            $description ? $car->description = $description : $car->description = $car->description;
+            $price ? $car->price = $price : $car->price = $car->price;
+            $condition ? $car->condition = $condition : $car->condition = $car->condition;
+            $picture ? $car->picture = $picture : $car->picture = $car->picture;
+
+            if ($car->save()) {
+                $updatedCar = new CarResource($car);
+                return [
+                    'message' => 'Car updated successfully',
+                    'status' => 201,
+                    'car' => $updatedCar
+                ];
+            } else {
+                return [
+                    'status' => 400
+                ];
+            }
+        } else {
+            return [
+                'error' => 'You are not authorized to perform this action',
+                'status' => 401
+            ];
+        }
     }
 
     /**
@@ -80,11 +144,37 @@ class CarController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($vendorId, $carId)
     {
-        $car = Car::findOrFail($id);
-        if ($car->delete()) {
-            return new CarResource($car);
+        if (!Car::find($carId)) {
+            return [
+                'error' => 'Car does not exist',
+                'status' => 404
+            ];
+        }
+
+        if (!User::find($vendorId)) {
+            return [
+                'error' => 'Please create an account first',
+                'status' => 403
+            ];
+        }
+
+        $user = User::findOrFail($vendorId);
+        $carObj = Car::findOrFail($carId);
+        if ($user->id == $carObj->vendor_id) {
+            if ($carObj->delete()) {
+                return [
+                    'message' => 'Deleted successfully',
+                    'status' => 200,
+                    'car' => new CarResource($carObj)
+                ];
+            }
+        } else {
+            return [
+                'error' => 'You are not authorized to perform this action',
+                'status' => 401
+            ];
         }
     }
 }

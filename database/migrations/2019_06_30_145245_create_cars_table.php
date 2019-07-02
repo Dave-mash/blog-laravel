@@ -22,7 +22,7 @@ class CreateCarsTable extends Migration
             $table->text('description', 10);
             $table->string('condition', 3);
             $table->integer('price');
-            $table->string('picture');
+            $table->string('picture')->default('default.jpg');
             $table->boolean('purchased')->default(false);
             $table->timestamps();
             

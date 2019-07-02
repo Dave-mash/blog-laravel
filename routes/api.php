@@ -30,8 +30,8 @@ Route::get('car/{id}', 'CarController@show');
 Route::post('car/{id}', 'CarController@store');
 
 // update car
-Route::put('car/{id}', 'CarController@update');
+Route::put('car/{vendorId}/{carId}', 'CarController@update');
 
 // delete a car
-Route::delete('car/{id}', 'CarController@destroy');
+Route::delete('car/{vendorId}/{carId}', 'CarController@destroy');
 
