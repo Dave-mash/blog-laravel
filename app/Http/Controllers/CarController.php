@@ -100,26 +100,16 @@ class CarController extends Controller
         $user = User::findOrFail($vendorId);
         if ($user->id == $carObj->vendor_id) {
 
-            $car = new Car;
+            $carObj->make = $request->input('make');
+            $carObj->model = $request->input('model');
+            $carObj->color = $request->input('color');
+            $carObj->description = $request->input('description');
+            $carObj->price = $request->input('price');
+            $carObj->condition = $request->input('condition');
+            $carObj->picture = $request->input('picture');
 
-            $make = $request->input('make');
-            $model = $request->input('model');
-            $color = $request->input('color');
-            $description = $request->input('description');
-            $condition = $request->input('condition');
-            $price = $request->input('price');
-            $picture = $request->input('picture');
-
-            $make ? $car->make = $make : $car->make = $car->make;
-            $model ? $car->model = $model : $car->model = $car->model;
-            $color ? $car->color = $color : $car->color = $car->color;
-            $description ? $car->description = $description : $car->description = $car->description;
-            $price ? $car->price = $price : $car->price = $car->price;
-            $condition ? $car->condition = $condition : $car->condition = $car->condition;
-            $picture ? $car->picture = $picture : $car->picture = $car->picture;
-
-            if ($car->save()) {
-                $updatedCar = new CarResource($car);
+            if ($carObj->save()) {
+                $updatedCar = new CarResource($carObj);
                 return [
                     'message' => 'Car updated successfully',
                     'status' => 201,
