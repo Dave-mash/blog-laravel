@@ -27,7 +27,16 @@ A simple car classified API
 5. Rename '.env.example file'
 
     `mv .env.example .env`
-6. Run server
+6. Generate a key
+
+    `php artisan key:generate`
+7. Run migrations
+
+    `php artisan migrate`
+8. Seed the data
+
+    `php artisan db:seed`
+9. Run server
 
     `composer artisan serve`
 
