@@ -21,24 +21,22 @@ class CarController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $id)
     {
-        //
+        $car = new Car;
+        $car->vendor_id = $id;
+        $car->make = $request->input('make');
+        $car->model = $request->input('model');
+        $car->color = $request->input('color');
+        $car->description = $request->input('description');
+        $car->condition = $request->input('condition');
+        $car->price = $request->input('price');
+        $car->picture = $request->input('picture');
     }
 
     /**
@@ -84,6 +82,9 @@ class CarController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $car = Car::findOrFail($id);
+        if ($car->delete()) {
+            return new CarResource($car);
+        }
     }
 }

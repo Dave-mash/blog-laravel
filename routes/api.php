@@ -16,22 +16,22 @@ use App\Car;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 // fetch all cars
-Route::get('/cars', 'CarController@index');
+Route::get('cars', 'CarController@index');
 
 // fetch single car
-Route::get('/cars{id}', 'CarController@show');
+Route::get('car/{id}', 'CarController@show');
 
 // create new car
-Route::post('/car', 'CarController@store');
+Route::post('car/{id}', 'CarController@store');
 
 // update car
-Route::put('/car{id}', 'CarController@update');
+Route::put('car/{id}', 'CarController@update');
 
 // delete a car
-Route::delete('/car{id}', 'CarController@destroy');
+Route::delete('car/{id}', 'CarController@destroy');
 
