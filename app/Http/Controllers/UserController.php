@@ -106,7 +106,7 @@ class UserController extends Controller
             return [
                 'message' => 'Deleted successfully',
                 'status' => 200,
-                'car' => new CarResource($carObj)
+                'car' => new UserResource($user)
             ];
         } else {
             return [
