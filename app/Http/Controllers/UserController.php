@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\User;
-use App\Car;
 use App\Http\Resources\User as UserResource;
 
 class UserController extends Controller
@@ -87,6 +86,49 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         //
+            // Authentication logic here
+        //
+        
+        if (!User::find($id)) {
+            return [
+                'error' => 'Account not found or does not exist',
+                'status' => 403
+            ];
+        }
+
+        $user = User::find($id);
+        $user->firstName = $request->input('firstName') ? $request->input('firstName') : $user->firstName;
+        $user->lastName = $request->input('lastName') ? $request->input('lastName') : $user->lastName;
+        $user->email = $request->input('email') ? $request->input('email') : $user->email;
+        $user->phoneNumber = $request->input('phoneNumber') ? $request->input('phoneNumber') : $user->phoneNumber;
+        $user->password = $request->input('password') ? $request->input('password') : $user->password;
+
+        if (User::where('email', '=', $user->email)->first()) {
+            return [
+                'error' => 'An account with this email already exists',
+                'status' => 409
+            ];
+        }
+        
+        if (User::where('phoneNumber', '=', $user->phoneNumber)->first()) {
+            return [
+                'error' => 'Phone number is already taken',
+                'status' => 409
+            ];
+        }
+
+        if ($user->save()) {
+            $updatedUser = new UserResource($user);
+            return [
+                'message' => 'User updated successfully',
+                'status' => 201,
+                'user' => $updatedUser
+            ];
+        } else {
+            return [
+                'status' => 400
+            ];
+        }
     }
 
     /**
