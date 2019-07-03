@@ -50,6 +50,6 @@ A simple car classified API
 - [x] A user should be able to post a car for sale.
 - [x] A vendor should be able to update car features.
 - [x] A vendor should be able to delete a car entry.
-- [ ] A vendor should be able to update their profile.
-- [ ] A vendor should be able to get their posted cars list.
+- [x] A vendor should be able to update their profile.
+- [x] A vendor should be able to get their posted cars list.
 - [ ] A vendor should be able to get all purchased cars.
