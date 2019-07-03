@@ -72,7 +72,7 @@ class CarController extends Controller
         $car = Car::findOrFail($id);
         return new CarResource($car);
     }
-
+    
     /**
      * Update the specified resource in storage.
      *
