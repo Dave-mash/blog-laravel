@@ -28,6 +28,9 @@ Car routes
 // fetch all cars
 Route::get('cars', 'CarController@index');
 
+// fetch vendor cars
+Route::get('{vendorId}/cars', 'CarController@vendorCars');
+
 // fetch single car
 Route::get('car/{id}', 'CarController@show');
 

@@ -29,34 +29,36 @@ class CarController extends Controller
      */
     public function store(Request $request, $id)
     {
-        $userId = User::findOrFail($id);
-        if ($userId) {
-            $picture = $request->input('picture');
-            $car = new Car;
-            $car->vendor_id = $id;
-            $car->make = $request->input('make');
-            $car->model = $request->input('model');
-            $car->color = $request->input('color');
-            $car->description = $request->input('description');
-            $car->condition = $request->input('condition');
-            $car->price = $request->input('price');
+        if (!User::find($id)) {
+            return [
+                'error' => 'Account not found or does not exist',
+                'status' => 403
+            ];
+        }
+        
+        // $picture = $request->input('picture');
+        $car = new Car;
+        $car->vendor_id = $id;
+        $car->make = $request->input('make');
+        $car->model = $request->input('model');
+        $car->color = $request->input('color');
+        $car->description = $request->input('description');
+        $car->condition = $request->input('condition');
+        $car->price = $request->input('price');
 
-            if ($car->save()) {
-                $newCar = new CarResource($car);
-                return [
-                    'message' => 'Car posted successfully',
-                    'status' => 201,
-                    'car' => $newCar
-                ];
-            } else {
-                return [
-                    'status' => 400
-                ];
-            }
+        if ($car->save()) {
+            $user = User::find($id);
+            $user->isAdmin = true;
+            $user->save();
+            $newCar = new CarResource($car);
+            return [
+                'message' => 'Car posted successfully',
+                'status' => 201,
+                'car' => $user
+            ];
         } else {
             return [
-                'error' => 'Please create an account first',
-                'status' => 401
+                'status' => 400
             ];
         }
     }
@@ -132,6 +134,45 @@ class CarController extends Controller
                 'status' => 401
             ];
         }
+    }
+    
+    /**
+     * View vendor cars.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function vendorCars($vendorId)
+    {
+        if (!User::find($vendorId)->get()) {
+            return [
+                'error' => 'Account not found or does not exist',
+                'status' => 404
+            ];
+        }
+
+        $user = User::find($vendorId);
+
+        if ($user->isAdmin == false) {
+            return [
+                'error' => 'You are not authorized to access this resource',
+                'status' => 401
+            ];
+        }
+        $cars = Car::where('vendor_id', '=', $vendorId)->get();
+        return CarResource::collection($cars);
+    }
+
+    /**
+     * View vendor cars.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function purchasedCars()
+    {
+
     }
 
     /**
