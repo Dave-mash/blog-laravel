@@ -62,11 +62,14 @@ Route::delete('cart/{userId}', 'CartController@clearCart');
 User routes
 */
 
+// Get all users
+Route::get('users', 'UserController@index');
+
 // Post a user
 Route::post('user', 'UserController@store');
 
 // Log in a user
-Route::post('user', 'UserController@login');
+Route::post('user/{id}', 'UserController@login');
 
 // Update a user
 Route::put('user/{id}', 'UserController@update');
