@@ -61,7 +61,7 @@ class CartController extends Controller
             ];
             $addedCar = new CartResource($newCart);
             $cart = Cart::all();
-            $cartCollection = CarResource::collection($cart);
+            $cartCollection = CartResource::collection($cart);
             return [
                 'message' => 'Successfully added to cart',
                 'status' => 200,
@@ -86,36 +86,38 @@ class CartController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($userId, $cartId)
     {
-        //
+        if (!Cart::find($cartId)) {
+            return [
+                'error' => 'Cart does not exist',
+                'status' => 404
+            ];
+        }
+
+        if (!User::find($userId)) {
+            return [
+                'error' => 'Please create an account first',
+                'status' => 403
+            ];
+        }
+
+        $cartObj = Cart::find($cartId);
+        if ($cartObj->delete()) {
+            return [
+                'message' => 'Cart deleted successfully',
+                'status' => 200,
+                'cart' => new CartResource($cartObj)
+            ];
+        } else {
+            return [
+                'status' => 400
+            ];
+        }
     }
 }

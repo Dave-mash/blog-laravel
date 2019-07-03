@@ -51,8 +51,8 @@ Route::get('cart', 'CartController@index');
 // add to cart
 Route::post('cart/{userId}/{carId}', 'CartController@store');
 
-// remove from cart
-Route::delete('cart/{userId}/{carId}', 'CartController@destroy');
+// delete cart
+Route::delete('cart/{userId}/{cartId}', 'CartController@destroy');
 
 // clear cart
 Route::delete('cart/{userId}', 'CartController@clearCart');
