@@ -43,7 +43,11 @@ class CartController extends Controller
             ];
         }
 
-        if (Cart::find($carId)) {
+        $car = Car::find($carId);
+        $cartItems = Cart::all();
+        $cartCollection = CartResource::collection($cartItems);
+
+        if (Cart::where('car_id', '=', $carId)->first()) {
             return [
                 'error' => 'This car is currently unavailable',
                 'status' => 409
@@ -51,21 +55,17 @@ class CartController extends Controller
         }
 
         $cart = new Cart;
+        $cart->buyer_id = (int)$userId;
+        $cart->vendor_id = $car->vendor_id;
+        $cart->car_id = (int)$carId;
 
         if ($cart->save()) {
-            $car = Car::find($carId);
-            $newCart = [
-                'buyer_id' => $userId,
-                'vendor_id' => $car->vendor_id,
-                'car_id' => $carId
-            ];
-            $addedCar = new CartResource($newCart);
-            $cart = Cart::all();
-            $cartCollection = CartResource::collection($cart);
+            $addedCar = new CartResource($cart);
+
             return [
                 'message' => 'Successfully added to cart',
                 'status' => 200,
-                'cart' => $cartCollection
+                'cart' => $addedCar
             ];
         } else {
             return [

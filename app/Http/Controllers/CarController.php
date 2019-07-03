@@ -69,6 +69,12 @@ class CarController extends Controller
      */
     public function show($id)
     {
+        if (!Car::find($id)) {
+            return [
+                'error' => 'Car was not found or does not exist',
+                'status' => 404
+            ];
+        }
         $car = Car::findOrFail($id);
         return new CarResource($car);
     }
