@@ -16,9 +16,9 @@ use App\Car;
 |
 */
 
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+Route::middleware('auth:api')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 
 /*
@@ -69,10 +69,10 @@ User routes
 Route::get('users', 'UserController@index');
 
 // Post a user
-Route::post('user', 'UserController@store');
+Route::post('register', 'UserController@store');
 
 // Log in a user
-Route::post('user/{id}', 'UserController@login');
+Route::post('login', 'UserController@login');
 
 // Update a user
 Route::put('user/{id}', 'UserController@update');
