@@ -13,6 +13,7 @@ $factory->define(Car::class, function (Faker $faker) {
         'color' => $faker->colorName,
         'description' => $faker->text($maxNbChars = 150),
         'condition' => rand(0,1) == 1 ? 'new' : 'old',
-        'price' => mt_rand(10000000, 99999999)
+        'price' => mt_rand(10000000, 99999999),
+        'rating' => mt_rand(0*10,5*10)/10
     ];
 });

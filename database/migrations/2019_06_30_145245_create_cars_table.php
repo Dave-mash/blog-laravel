@@ -24,6 +24,7 @@ class CreateCarsTable extends Migration
             $table->integer('price');
             $table->string('picture')->default('default.jpg');
             $table->boolean('purchased')->default(false);
+            $table->integer('rating')->default(0);
             $table->timestamps();
             
             $table->foreign('vendor_id')

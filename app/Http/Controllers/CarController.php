@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use JWTAuth;
+
 use App\Http\Requests;
 use App\Car;
 use App\User;
