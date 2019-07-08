@@ -129,9 +129,56 @@ class CartController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $userId, $cartId)
     {
-        //
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+            $user = null;
+            $cart = null;
+            $car = null;
+    
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$userId) {
+                return error();
+            }
+
+            if (!$cart = Cart::where('id', '=', $cartId)->first()) {
+                return response()->json([
+                    'error' => 'Cart not found',
+                    'status' => 404
+                ]);
+            } elseif (!$car = Car::where('id', '=', $cart->car_id)->first()) {
+                return response()->json([
+                    'error' => 'Car not found',
+                    'status' => 404
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'status' => 200,
+                'cart' => $car
+            ]);
+
+        } catch (JWTException $exception) {
+            return response()->json([
+                'status' => 400
+            ]);
+        }
     }
 
     /**

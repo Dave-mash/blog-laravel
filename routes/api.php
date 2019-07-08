@@ -56,6 +56,8 @@ Route::group(['middleware' => 'auth.jwt'], function () {
     Route::get('cart/{userId}', 'CartController@index');
     // add to cart
     Route::post('cart/{userId}/{carId}', 'CartController@store');
+    // Show single cart
+    Route::get('cart/{userId}/{cartId}', 'CartController@show');
     // delete cart
     Route::delete('cart/{userId}/{cartId}', 'CartController@destroy');
     // clear cart
