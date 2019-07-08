@@ -23,6 +23,8 @@ use App\Car;
 
 // fetch all cars
 Route::get('cars', 'CarController@index')->middleware('cors');
+// fetch single car
+Route::get('car/{id}', 'CarController@show');
 
 /*
 User routes
@@ -65,8 +67,6 @@ Route::group(['middleware' => 'auth.jwt'], function () {
 
     // fetch vendor cars
     Route::get('{vendorId}/cars', 'CarController@vendorCars');
-    // fetch single car
-    Route::get('car/{id}', 'CarController@show');
     // create new car
     Route::post('car/{id}', 'CarController@store');
     // update car

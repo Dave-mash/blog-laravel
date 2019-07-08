@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 use App\Http\Requests;
 use App\Car;
@@ -31,24 +33,40 @@ class CarController extends Controller
      */
     public function store(Request $request, $id)
     {
-        if (!User::find($id)) {
-            return [
-                'error' => 'Account not found or does not exist',
-                'status' => 403
-            ];
-        }
-        
-        // $picture = $request->input('picture');
-        $car = new Car;
-        $car->vendor_id = $id;
-        $car->make = $request->input('make');
-        $car->model = $request->input('model');
-        $car->color = $request->input('color');
-        $car->description = $request->input('description');
-        $car->condition = $request->input('condition');
-        $car->price = $request->input('price');
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
 
-        if ($car->save()) {
+        try {
+            $userObj = null;
+            $user = null;
+
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$id) {
+                return error();
+            }
+
+            // $picture = $request->input('picture');
+            $car = new Car;
+            $car->vendor_id = $id;
+            $car->make = $request->input('make');
+            $car->model = $request->input('model');
+            $car->color = $request->input('color');
+            $car->description = $request->input('description');
+            $car->condition = $request->input('condition');
+            $car->price = $request->input('price');
+            $car->save();
+
             $user = User::find($id);
             $user->isAdmin = true;
             $user->save();
@@ -58,11 +76,14 @@ class CarController extends Controller
                 'status' => 201,
                 'car' => $user
             ];
-        } else {
-            return [
+        } catch (JWTException $exception) {
+            return response()->json([
+                'error' => 'Something wrong happened',
                 'status' => 400
-            ];
+            ]);
         }
+        
+        
     }
 
     /**
@@ -92,50 +113,66 @@ class CarController extends Controller
      */
     public function update(Request $request, $vendorId, $carId)
     {
-        if (!Car::find($carId)) {
-            return [
-                'error' => 'Car does not exist',
-                'status' => 404
-            ];
-        }
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+            $user = null;
+    
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$vendorId) {
+                return error();
+            }
 
-        if (!User::find($vendorId)) {
-            return [
-                'error' => 'Please create an account first',
-                'status' => 403
-            ];
-        }
+            if (!Car::find($carId)) {
+                return [
+                    'error' => 'Car does not exist',
+                    'status' => 404
+                ];
+            }
+    
+            $carObj = Car::findOrFail($carId);
 
-        $carObj = Car::findOrFail($carId);
-        $user = User::findOrFail($vendorId);
-        if ($user->id == $carObj->vendor_id) {
-
-            $carObj->make = $request->input('make');
-            $carObj->model = $request->input('model');
-            $carObj->color = $request->input('color');
-            $carObj->description = $request->input('description');
-            $carObj->price = $request->input('price');
-            $carObj->condition = $request->input('condition');
-            $carObj->picture = $request->input('picture');
-
-            if ($carObj->save()) {
+            if ($user->id == $carObj->vendor_id) {
+    
+                $carObj->make = $request->input('make');
+                $carObj->model = $request->input('model');
+                $carObj->color = $request->input('color');
+                $carObj->description = $request->input('description');
+                $carObj->price = $request->input('price');
+                $carObj->condition = $request->input('condition');
+                $carObj->picture = $request->input('picture');
+                $carObj->save();
+    
                 $updatedCar = new CarResource($carObj);
+
                 return [
                     'message' => 'Car updated successfully',
                     'status' => 201,
                     'car' => $updatedCar
                 ];
-            } else {
-                return [
-                    'status' => 400
-                ];
             }
-        } else {
-            return [
-                'error' => 'You are not authorized to perform this action',
-                'status' => 401
-            ];
+
+        } catch (JWTException $exception) {
+            return response()->json([
+                'error' => 'Something wrong happened',
+                'status' => 400
+            ]);
         }
+        
+
     }
     
     /**
@@ -146,14 +183,27 @@ class CarController extends Controller
      */
     public function vendorCars($vendorId)
     {
-        if (!User::find($vendorId)->get()) {
-            return [
-                'error' => 'Account not found or does not exist',
-                'status' => 404
-            ];
-        }
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
 
-        $user = User::find($vendorId);
+        $userObj = null;
+        $user = null;
+
+        function error() {
+            return response()->json([
+                'error' => 'You are not authorized to access this resource',
+                'status' => 401
+            ], 401);
+        }
+        
+        if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+            return error();
+        } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+            return error();
+        } elseif ($userObj->id !== (int)$vendorId) {
+            return error();
+        }
 
         if ($user->isAdmin == false) {
             return [
@@ -185,17 +235,32 @@ class CarController extends Controller
      */
     public function destroy($vendorId, $carId)
     {
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
+
+        $userObj = null;
+        $user = null;
+
+        function error() {
+            return response()->json([
+                'error' => 'You are not authorized to access this resource',
+                'status' => 401
+            ], 401);
+        }
+        
+        if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+            return error();
+        } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+            return error();
+        } elseif ($userObj->id !== (int)$vendorId) {
+            return error();
+        }
+
         if (!Car::find($carId)) {
             return [
                 'error' => 'Car does not exist',
                 'status' => 404
-            ];
-        }
-
-        if (!User::find($vendorId)) {
-            return [
-                'error' => 'Please create an account first',
-                'status' => 403
             ];
         }
 
