@@ -29,23 +29,21 @@ User routes
 */
 
 // Get all users
-Route::get('users', 'UserController@index');
-
+Route::get('users', 'UserController@index')->middleware('cors');
 // Post a user
-Route::post('register', 'UserController@store');
-
+Route::post('register', 'UserController@store')->middleware('cors');
 // Log in a user
-Route::post('login', 'UserController@login');
+Route::post('login', 'UserController@login')->middleware('cors');
 
-Route::get('logout', 'UserController@logout');
  
 Route::group(['middleware' => 'auth.jwt'], function () {
+    Route::get('logout/{id}', 'UserController@logout');
 
     // Update a user
     Route::put('user/{id}', 'UserController@update');
     // Delete a user
     Route::delete('user/{id}', 'UserController@destroy');
-    
+    // Fetch authorized user
     Route::get('user', 'UserController@getAuthUser');
 
     /*

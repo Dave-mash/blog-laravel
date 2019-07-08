@@ -34,7 +34,7 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(RegisterAuthRequest $request)
+    public function store(Request $request)
     {
 
         $user = new User;
@@ -44,15 +44,6 @@ class UserController extends Controller
         $user->email = $request->input('email');
         $user->phoneNumber = $request->input('phoneNumber');
         
-        if ($user->password !== $user->c_password) {
-            return response()->json([
-                'error' => 'Your passwords don\'t match',
-                'status' => 422
-            ], 422);
-        }
-        
-        $user->password = Hash::make($request->password);
-
         if (User::where('email', '=', $user->email)->first()) {
             return response()->json([
                 'error' => 'An account with this email already exists',
@@ -66,6 +57,15 @@ class UserController extends Controller
                 'status' => 409
             ]);
         }
+        
+        if ($user->password !== $user->c_password) {
+            return response()->json([
+                'error' => 'Your passwords don\'t match',
+                'status' => 422
+            ], 422);
+        }
+        
+        $user->password = Hash::make($request->password);
         
         if ($user->save()) {
             if ($this->loginAfterSignUp) {
@@ -107,14 +107,31 @@ class UserController extends Controller
 
     // Log out
 
-    public function logout(Request $request)
+    public function logout(Request $request, $id)
     {
-        // $this->validate($request, [
-        //     'token' => 'required'
-        // ]);
- 
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
+        
         try {
-            JWTAuth::parseToken()->authenticate();
+            $userObj = null;
+            $user = null;
+
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$id) {
+                return error();
+            }
+            
             JWTAuth::invalidate($request->token);
  
             return response()->json([
@@ -135,10 +152,12 @@ class UserController extends Controller
         $this->validate($request, [
             'token' => 'required'
         ]);
- 
-        $user = JWTAuth::authenticate($request->token);
- 
-        return response()->json(['user' => $user]);
+
+        $user = JWTAuth::parseToken()->authenticate();
+        return response()->json([
+            'success' => true,
+            'user' => $user
+        ]);    
     }
 
     /**
@@ -150,50 +169,70 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
-            // Authentication logic here
-        //
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
         
-        if (!User::find($id)) {
-            return response()->json([
-                'error' => 'Account not found or does not exist',
-                'status' => 403
-            ]);
-        }
+        try {
+            $userObj = null;
+            $user = null;
 
-        $user = User::find($id);
-        $user->firstName = $request->input('firstName') ? $request->input('firstName') : $user->firstName;
-        $user->lastName = $request->input('lastName') ? $request->input('lastName') : $user->lastName;
-        $user->email = $request->input('email') ? $request->input('email') : $user->email;
-        $user->phoneNumber = $request->input('phoneNumber') ? $request->input('phoneNumber') : $user->phoneNumber;
-        $user->password = $request->input('password') ? $request->input('password') : $user->password;
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$id) {
+                return error();
+            }
+            
+            $user->firstName = $request->input('firstName') ? $request->input('firstName') : $user->firstName;
+            $user->lastName = $request->input('lastName') ? $request->input('lastName') : $user->lastName;
+            $user->username = $request->input('username') ? $request->input('username') : $user->username;
+            $user->email = $request->input('email') ? $request->input('email') : $user->email;
+            $user->phoneNumber = $request->input('phoneNumber') ? $request->input('phoneNumber') : $user->phoneNumber;
+            $user->password = $request->input('password') ? $request->input('password') : $user->password;
 
-        if (User::where('email', '=', $user->email)->first()) {
-            return response()->json([
-                'error' => 'An account with this email already exists',
-                'status' => 409
-            ]);
-        }
-        
-        if (User::where('phoneNumber', '=', $user->phoneNumber)->first()) {
-            return response()->json([
-                'error' => 'Phone number is already taken',
-                'status' => 409
-            ]);
-        }
+            if (User::where('email', '=', $user->email)->first()) {
+                return response()->json([
+                    'error' => 'An account with this email already exists',
+                    'status' => 409
+                ]);
+            }
+            
+            if (User::where('phoneNumber', '=', $user->phoneNumber)->first()) {
+                return response()->json([
+                    'error' => 'Phone number is already taken',
+                    'status' => 409
+                ]);
+            }
 
-        if ($user->save()) {
-            $updatedUser = new UserResource($user);
+            if ($user->save()) {
+                $updatedUser = new UserResource($user);
+                return response()->json([
+                    'message' => 'User updated successfully',
+                    'status' => 201,
+                    'user' => $updatedUser
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 400
+                ]);
+            }
+
+        } catch (JWTException $exception) {
             return response()->json([
-                'message' => 'User updated successfully',
-                'status' => 201,
-                'user' => $updatedUser
+                'error' => 'Unauthorized operation',
+                'status' => 401
             ]);
-        } else {
-            return response()->json([
-                'status' => 400
-            ]);
-        }
+        };
+
     }
 
     /**
@@ -202,24 +241,41 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        // check if user is logged in
+        $this->validate($request, [
+            'token' => 'required'
+        ]);
         
-            // Authentication logic here
-        
-        $user = User::find($id); // loginId == $id
-        if ($user->delete()) {
+        try {
+            $userObj = null;
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$id) {
+                return error();
+            }
+         
+            if ($user->delete()) {
+                return response()->json([
+                    'message' => 'Deleted successfully',
+                    'status' => 200,
+                    'user' => new UserResource($user)
+                ]);
+            }
+        } catch (JWTException $exception) {
             return response()->json([
-                'message' => 'Deleted successfully',
-                'status' => 200,
-                'user' => new UserResource($user)
-            ]);
-        } else {
-            return response()->json([
-                'error' => 'You are not authorized to perform this action',
+                'error' => 'Unauthorized operation',
                 'status' => 401
             ]);
-        }
+        };
     }
 }
