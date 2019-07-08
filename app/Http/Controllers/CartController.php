@@ -86,6 +86,12 @@ class CartController extends Controller
             } elseif ($userObj->id !== (int)$userId) {
                 return error();
             }
+            // if (!$car = Car::where('vendor_id', '=', $userId) {
+            //     return response()->json([
+            //         'error' => 'you already own this car',
+            //         'status' => 400
+            //     ], 400);
+            // }
 
             if (!$car = Car::find($carId)) {
                 return [
@@ -187,33 +193,56 @@ class CartController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($userId, $cartId)
+    public function destroy(Request $request, $userId, $cartId)
     {
-        if (!Cart::find($cartId)) {
-            return [
-                'error' => 'Cart does not exist',
-                'status' => 404
-            ];
-        }
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+            $user = null;
+            $cart = null;
+            $car = null;
+    
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$userId) {
+                return error();
+            }
 
-        if (!User::find($userId)) {
-            return [
-                'error' => 'Please create an account first',
-                'status' => 403
-            ];
-        }
+            if (!$cart = Cart::where('id', '=', $cartId)->first()) {
+                return response()->json([
+                    'error' => 'Cart not found',
+                    'status' => 404
+                ]);
+            } elseif (!$car = Car::where('id', '=', $cart->car_id)->first()) {
+                return response()->json([
+                    'error' => 'Car not found',
+                    'status' => 404
+                ]);
+            }
+            $cartObj->delete();
 
-        $cartObj = Cart::find($cartId);
-        if ($cartObj->delete()) {
-            return [
+            return response()->json([
                 'message' => 'Cart deleted successfully',
                 'status' => 200,
-                'cart' => new CartResource($cartObj)
-            ];
-        } else {
-            return [
+                'cart' => new CartResource($cart)
+            ]);
+
+        } catch (JWTException $exception) {
+            return response()->json([
                 'status' => 400
-            ];
+            ]);
         }
     }
 
