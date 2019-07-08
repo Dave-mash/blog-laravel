@@ -181,51 +181,45 @@ class CarController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function vendorCars($vendorId)
+    public function vendorCars(Request $request, $vendorId)
     {
-        $this->validate($request, [
-            'token' => 'required'
-        ]);
 
-        $userObj = null;
-        $user = null;
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+            $user = null;
+    
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$vendorId) {
+                return error();
+            } elseif ($user->isAdmin == false) {
+                return error();
+            }
 
-        function error() {
+            $cars = Car::where('vendor_id', '=', $vendorId)->get();
+            return CarResource::collection($cars);
+
+        } catch (JWTException $exception) {
             return response()->json([
-                'error' => 'You are not authorized to access this resource',
-                'status' => 401
-            ], 401);
-        }
-        
-        if (!$userObj = JWTAuth::parseToken()->authenticate()) {
-            return error();
-        } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
-            return error();
-        } elseif ($userObj->id !== (int)$vendorId) {
-            return error();
+                'status' => 400
+            ], 400);
         }
 
-        if ($user->isAdmin == false) {
-            return [
-                'error' => 'You are not authorized to access this resource',
-                'status' => 401
-            ];
-        }
-        $cars = Car::where('vendor_id', '=', $vendorId)->get();
-        return CarResource::collection($cars);
     }
 
-    /**
-     * View vendor cars.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function purchasedCars()
-    {
-
-    }
 
     /**
      * Remove the specified resource from storage.
@@ -233,52 +227,56 @@ class CarController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($vendorId, $carId)
+    public function destroy(Request $request, $vendorId, $carId)
     {
-        $this->validate($request, [
-            'token' => 'required'
-        ]);
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+            $user = null;
+            $carObj = null;
+    
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
 
-        $userObj = null;
-        $user = null;
-
-        function error() {
-            return response()->json([
-                'error' => 'You are not authorized to access this resource',
-                'status' => 401
-            ], 401);
-        }
-        
-        if (!$userObj = JWTAuth::parseToken()->authenticate()) {
-            return error();
-        } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
-            return error();
-        } elseif ($userObj->id !== (int)$vendorId) {
-            return error();
-        }
-
-        if (!Car::find($carId)) {
-            return [
-                'error' => 'Car does not exist',
-                'status' => 404
-            ];
-        }
-
-        $user = User::findOrFail($vendorId);
-        $carObj = Car::findOrFail($carId);
-        if ($user->id == $carObj->vendor_id) {
-            if ($carObj->delete()) {
+            if (!$carObj = Car::find($carId)) {
                 return [
-                    'message' => 'Deleted successfully',
-                    'status' => 200,
-                    'car' => new CarResource($carObj)
+                    'error' => 'Car does not exist',
+                    'status' => 404
                 ];
             }
-        } else {
-            return [
-                'error' => 'You are not authorized to perform this action',
-                'status' => 401
-            ];
+
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$vendorId) {
+                return error();
+            } elseif ($user->id !== $carObj->vendor_id) {
+                return error();
+            }
+
+            $carObj->delete();
+    
+            return response()->json([
+                'message' => 'Deleted successfully',
+                'status' => 200,
+                'car' => new CarResource($carObj)
+            ], 200);
+
+        } catch(JWTException $exception) {
+            return response()->json([
+                'status' => 400
+            ], 400);
         }
+
+
     }
 }

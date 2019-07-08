@@ -3,22 +3,56 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Contracts\JWTSubject;
+
 use App\Car;
 use App\User;
 use App\Cart;
+use App\Http\Controllers\AuthHelper;
 use App\Http\Resources\Cart as CartResource;
 
 class CartController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request, $userId)
     {
-        $cart = Cart::all();
-        return CartResource::collection($cart);
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+            $user = null;
+    
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$userId) {
+                return error();
+            }
+
+            $cart = Cart::where('buyer_id', '=', $userId)->get();
+            return CartResource::collection($cart);
+        } catch (JWTException $exception) {
+            return response()->json([
+                'status' => 400
+            ]);
+        }
     }
 
     /**
@@ -29,49 +63,64 @@ class CartController extends Controller
      */
     public function store(Request $request, $userId, $carId)
     {
-        if (!User::find($userId)) {
-            return [
-                'error' => 'Create an account first',
-                'status' => 401
-            ];
-        }
-        
-        if (!Car::find($carId)) {
-            return [
-                'error' => 'Car was not found or does not exist',
-                'status' => 404
-            ];
-        }
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+            $user = null;
+            $car = null;
+    
+            function error() {
+                return response()->json([
+                    'error' => 'You are not authorized to access this resource',
+                    'status' => 401
+                ], 401);
+            }
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$userId) {
+                return error();
+            }
 
-        $car = Car::find($carId);
-        $cartItems = Cart::all();
-        $cartCollection = CartResource::collection($cartItems);
-
-        if (Cart::where('car_id', '=', $carId)->first()) {
-            return [
-                'error' => 'This car is currently unavailable',
-                'status' => 409
-            ];
-        }
-
-        $cart = new Cart;
-        $cart->buyer_id = (int)$userId;
-        $cart->vendor_id = $car->vendor_id;
-        $cart->car_id = (int)$carId;
-
-        if ($cart->save()) {
+            if (!$car = Car::find($carId)) {
+                return [
+                    'error' => 'Car was not found or does not exist',
+                    'status' => 404
+                ];
+            }
+                
+            if (Cart::where('car_id', '=', $carId)->first()) {
+                return [
+                    'error' => 'This car is currently unavailable',
+                    'status' => 409
+                ];
+            }
+    
+            $cart = new Cart;
+            $cart->buyer_id = (int)$userId;
+            $cart->vendor_id = $car->vendor_id;
+            $cart->car_id = (int)$carId;
+            $cart->save();
+    
             $addedCar = new CartResource($cart);
-
-            return [
+    
+            return response()->json([
                 'message' => 'Successfully added to cart',
                 'status' => 200,
                 'cart' => $addedCar
-            ];
-        } else {
-            return [
+            ]);
+        } catch (JWTException $exception) {
+            return response()->json([
                 'status' => 400
-            ];
+            ]);
         }
+        
+
     }
 
     /**
@@ -120,4 +169,16 @@ class CartController extends Controller
             ];
         }
     }
+
+    /**
+     * View vendor cars.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+     public function purchasedCars()
+     {
+ 
+     }
 }

@@ -53,13 +53,16 @@ Route::group(['middleware' => 'auth.jwt'], function () {
     */
 
     // fetch cart
-    Route::get('cart', 'CartController@index');
+    Route::get('cart/{userId}', 'CartController@index');
     // add to cart
     Route::post('cart/{userId}/{carId}', 'CartController@store');
     // delete cart
     Route::delete('cart/{userId}/{cartId}', 'CartController@destroy');
     // clear cart
     Route::delete('cart/{userId}', 'CartController@clearCart');
+    // Checkout
+    Route::patch('checkout/{vendorId}', 'CarController@checkout');
+
 
     /*
     Car routes
