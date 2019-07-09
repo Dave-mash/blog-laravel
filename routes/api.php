@@ -63,7 +63,7 @@ Route::group(['middleware' => 'auth.jwt'], function () {
     // clear cart
     Route::delete('cart/{userId}', 'CartController@clearCart');
     // Checkout
-    Route::patch('checkout/{vendorId}', 'CarController@checkout');
+    Route::patch('checkout/{userId}', 'CartController@checkout');
 
 
     /*

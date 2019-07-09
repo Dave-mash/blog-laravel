@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -12,6 +13,13 @@ use App\User;
 use App\Cart;
 use App\Http\Controllers\AuthHelper;
 use App\Http\Resources\Cart as CartResource;
+
+function error() {
+    return response()->json([
+        'error' => 'You are not authorized to access this resource',
+        'status' => 401
+    ], 401);
+}
 
 class CartController extends Controller
 {
@@ -29,18 +37,10 @@ class CartController extends Controller
             ]);
     
             $userObj = null;
-            $user = null;
-    
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
-            
+                
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
-            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+            } elseif (!User::where('id', '=', $userObj->id)->first()) {
                 return error();
             } elseif ($userObj->id !== (int)$userId) {
                 return error();
@@ -71,14 +71,7 @@ class CartController extends Controller
             $userObj = null;
             $user = null;
             $car = null;
-    
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
-            
+                
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
             } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
@@ -86,25 +79,26 @@ class CartController extends Controller
             } elseif ($userObj->id !== (int)$userId) {
                 return error();
             }
-            // if (!$car = Car::where('vendor_id', '=', $userId) {
+
+            // if (Car::where('vendor_id', '=', $userId) {
             //     return response()->json([
-            //         'error' => 'you already own this car',
+            //         'error' => 'you cannot add your cars to cart',
             //         'status' => 400
             //     ], 400);
             // }
 
             if (!$car = Car::find($carId)) {
-                return [
+                return response()->json([
                     'error' => 'Car was not found or does not exist',
                     'status' => 404
-                ];
+                ], 404);
             }
                 
             if (Cart::where('car_id', '=', $carId)->first()) {
-                return [
+                return response()->json([
                     'error' => 'This car is currently unavailable',
                     'status' => 409
-                ];
+                ]);
             }
     
             $cart = new Cart;
@@ -146,14 +140,7 @@ class CartController extends Controller
             $user = null;
             $cart = null;
             $car = null;
-    
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
-            
+                
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
             } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
@@ -201,20 +188,11 @@ class CartController extends Controller
             ]);
     
             $userObj = null;
-            $user = null;
             $cart = null;
-            $car = null;
-    
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
-            
+                
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
-            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+            } elseif (!User::where('id', '=', $userObj->id)->first()) {
                 return error();
             } elseif ($userObj->id !== (int)$userId) {
                 return error();
@@ -225,19 +203,57 @@ class CartController extends Controller
                     'error' => 'Cart not found',
                     'status' => 404
                 ]);
-            } elseif (!$car = Car::where('id', '=', $cart->car_id)->first()) {
+            } elseif (!Car::where('id', '=', $cart->car_id)->first()) {
                 return response()->json([
                     'error' => 'Car not found',
                     'status' => 404
                 ]);
             }
-            $cartObj->delete();
+            $cart->delete();
 
             return response()->json([
                 'message' => 'Cart deleted successfully',
                 'status' => 200,
                 'cart' => new CartResource($cart)
             ]);
+
+        } catch (JWTException $exception) {
+            return response()->json([
+                'status' => 400
+            ]);
+        }
+    }
+
+    // Clear cart
+    public function clearCart(Request $request, $userId)
+    {
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+                
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$userId) {
+                return error();
+            }
+
+            $userCart = Cart::where('buyer_id', '=', $userId)->get();
+
+            foreach ($userCart as $car) {
+                $car->delete();
+            }
+
+            return response()->json([
+                'message' => 'Cart was cleared successfully',
+                'status' => 200,
+                'cart' => $userCart,
+
+            ], 200);
 
         } catch (JWTException $exception) {
             return response()->json([
@@ -253,8 +269,47 @@ class CartController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-     public function purchasedCars()
+     public function checkout(Request $request, $userId)
      {
- 
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+    
+            $userObj = null;
+                
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$userId) {
+                return error();
+            }
+
+            $userCart = Cart::where('buyer_id', '=', $userId)->get();
+
+            $car = null;
+            $readyCart = [];
+
+            // Set purchase property to true
+            
+            foreach ($userCart as $car) {
+                Car::where('id', '=', $car->car_id)->update(['purchased' => true]);
+                $carItem = Car::where('id', '=', $car->buyer_id)->get();
+                array_push($readyCart, $carItem);
+            }
+
+            return response()->json([
+                'message' => 'Cart was cleared successfully',
+                'status' => 200,
+                'cart' => $readyCart,
+            ], 200);
+
+        } catch (JWTException $exception) {
+            return response()->json([
+                'status' => 400
+            ]);
+        }
+
      }
 }

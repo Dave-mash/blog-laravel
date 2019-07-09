@@ -12,6 +12,13 @@ use App\Car;
 use App\User;
 use App\Http\Resources\Car as CarResource;
 
+function error() {
+    return response()->json([
+        'error' => 'You are not authorized to access this resource',
+        'status' => 401
+    ], 401);
+}
+
 class CarController extends Controller
 {
     /**
@@ -21,6 +28,8 @@ class CarController extends Controller
      */
     public function index()
     {
+        $bought = Car::where('purchased', '=', true);
+        $bought->delete();
         $car = Car::all();
         return CarResource::collection($car);
     }
@@ -41,13 +50,6 @@ class CarController extends Controller
             $userObj = null;
             $user = null;
 
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
-            
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
             } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
@@ -121,12 +123,7 @@ class CarController extends Controller
             $userObj = null;
             $user = null;
     
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
+            
             
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
@@ -192,12 +189,7 @@ class CarController extends Controller
             $userObj = null;
             $user = null;
     
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
+            
             
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
@@ -238,12 +230,7 @@ class CarController extends Controller
             $user = null;
             $carObj = null;
     
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
+            
 
             if (!$carObj = Car::find($carId)) {
                 return [
