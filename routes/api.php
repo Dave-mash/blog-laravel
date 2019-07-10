@@ -22,7 +22,7 @@ use App\Car;
 
 
 // Get all users
-Route::get('', 'HomeController@index')->middleware('cors');
+Route::get('/', 'HomeController@index')->middleware('cors');
 
 // fetch all cars
 Route::get('cars', 'CarController@index')->middleware('cors');
