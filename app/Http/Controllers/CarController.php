@@ -11,6 +11,7 @@ use App\Http\Requests;
 use App\Car;
 use App\User;
 use App\Http\Resources\Car as CarResource;
+use Dotenv\Regex\Success;
 
 function error() {
     return response()->json([
@@ -22,23 +23,16 @@ function error() {
 class CarController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Get all cars
      */
     public function index()
     {
-        $bought = Car::where('purchased', '=', true);
-        $bought->delete();
-        $car = Car::all();
-        return CarResource::collection($car);
+        $car = Car::where('purchased', '=', false)->get();
+        return CarResource::collection($car);            
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * Post a car
      */
     public function store(Request $request, $id)
     {
@@ -84,15 +78,10 @@ class CarController extends Controller
                 'status' => 400
             ]);
         }
-        
-        
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Display a car
      */
     public function show($id)
     {
@@ -107,11 +96,7 @@ class CarController extends Controller
     }
     
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Update a car
      */
     public function update(Request $request, $vendorId, $carId)
     {
@@ -175,8 +160,6 @@ class CarController extends Controller
     /**
      * View vendor cars.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function vendorCars(Request $request, $vendorId)
     {
@@ -212,13 +195,61 @@ class CarController extends Controller
 
     }
 
+    /**
+     * View purchased cars
+     */
+    public function purchased(Request $request, $vendorId)
+    {
+
+        try {
+            $this->validate($request, [
+                'token' => 'required'
+            ]);
+
+            $purchased = null;
+            $user = null;
+            
+            if (!$userObj = JWTAuth::parseToken()->authenticate()) {
+                return error();
+            } elseif (!$user = User::where('id', '=', $userObj->id)->first()) {
+                return error();
+            } elseif ($userObj->id !== (int)$vendorId) {
+                return error();
+            } elseif ($user->isAdmin == false) {
+                return error();
+            }
+
+            if ($cars = Car::where('vendor_id', '=', $vendorId)->get()) {
+                if ($cars[0]->purchased == true) {
+                    return CarResource::collection($cars);
+                } else {
+                    return response()->json([
+                        'message' => 'No purchased cars found',
+                        'error' => 404
+                    ], 404);
+                }               
+            }
+
+        } catch (JWTException $exception) {
+            return response()->json([
+                'status' => 400,
+                'error' => $exception
+            ], 400);
+        };
+
+        if (!$purchased = Car::find($vendorId)) {
+            return [
+                'error' => 'Car was not found or does not exist',
+                'status' => 404
+            ];
+        }
+    }
+    
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Remove a car
      */
+
     public function destroy(Request $request, $vendorId, $carId)
     {
         try {
@@ -263,7 +294,5 @@ class CarController extends Controller
                 'status' => 400
             ], 400);
         }
-
-
     }
 }

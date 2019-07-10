@@ -36,9 +36,14 @@ Route::get('users', 'UserController@index')->middleware('cors');
 Route::post('register', 'UserController@store')->middleware('cors');
 // Log in a user
 Route::post('login', 'UserController@login')->middleware('cors');
+// Admin log in
+Route::post('admin_login', 'UserController@admin_login')->middleware('cors');
 
  
-Route::group(['middleware' => 'auth.jwt'], function () {
+Route::group([
+    'middleware' => 'auth.jwt',
+    'middleware' => 'cors'
+], function () {
     Route::get('logout/{id}', 'UserController@logout');
 
     // Update a user
@@ -78,4 +83,6 @@ Route::group(['middleware' => 'auth.jwt'], function () {
     Route::put('car/{vendorId}/{carId}', 'CarController@update');
     // delete a car
     Route::delete('car/{vendorId}/{carId}', 'CarController@destroy');
+    // fetch purchased car
+    Route::get('purchased_cars/{vendorId}', 'CarController@purchased');
 });

@@ -13,6 +13,13 @@ use App\User;
 use App\Http\Resources\User as UserResource;
 use App\Http\Requests\RegisterAuthRequest;
 
+function error() {
+    return response()->json([
+        'error' => 'You are not authorized to access this resource',
+        'status' => 401
+    ], 401);
+}
+
 class UserController extends Controller
 {
     public $loginAfterSignUp = true;
@@ -81,12 +88,9 @@ class UserController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * user login
      */
+
     public function login(Request $request)
     {
         // grab credentials from the request
@@ -101,8 +105,39 @@ class UserController extends Controller
  
         return response()->json([
             'success' => true,
-            'token' => $jwt_token,
+            'token' => $jwt_token
         ]);
+    }
+
+    /**
+     * admin login
+     */
+
+    public function admin_login(Request $request)
+    {
+        // grab credentials from the request
+
+        $credentials = $request->only('email', 'password');
+        
+        if (!$jwt_token = JWTAuth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid Email or Password'
+            ], 401);
+        }
+
+        $user = new User;
+        $user->email = $request->input('email');
+        $userObj = User::where('email', '=', $user->email)->first();
+ 
+        if ($userObj->isAdmin == true) {
+            return response()->json([
+                'success' => true,
+                'token' => $jwt_token
+            ]);
+        } else {
+            return error();
+        }
     }
 
     // Log out
@@ -116,13 +151,6 @@ class UserController extends Controller
         try {
             $userObj = null;
             $user = null;
-
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
             
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
@@ -147,6 +175,7 @@ class UserController extends Controller
     }
 
     // Get authenticated user
+
     public function getAuthUser(Request $request)
     {
         $this->validate($request, [
@@ -161,12 +190,9 @@ class UserController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Update user account
      */
+
     public function update(Request $request, $id)
     {
         $this->validate($request, [
@@ -176,13 +202,6 @@ class UserController extends Controller
         try {
             $userObj = null;
             $user = null;
-
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
             
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
@@ -249,12 +268,6 @@ class UserController extends Controller
         
         try {
             $userObj = null;
-            function error() {
-                return response()->json([
-                    'error' => 'You are not authorized to access this resource',
-                    'status' => 401
-                ], 401);
-            }
             
             if (!$userObj = JWTAuth::parseToken()->authenticate()) {
                 return error();
