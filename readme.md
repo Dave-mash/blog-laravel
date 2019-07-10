@@ -40,6 +40,32 @@ A simple car classified API
 
     `composer artisan serve`
 
+### car-classified application endpoints
+| Endpoint        | Functionality           | HTTP method  |
+| ------------- |:-------------:| -----:|
+| `/`      | Welcome | GET |
+| `/register`      | Register a user | POST |
+| `/login`      | Login a user       |   POST |
+| `/users` | Fetch all users       |    GET |
+| `/user/<userId>?token=<tokenvalue>` | Delete a user        |    DELETE |
+| `/user/<userId>?token=<tokenvalue>` | Update a user        |    PUT |
+| `/logout/<userId>?token=<tokenvalue>` | Log out a user        |    GET |
+| `/admin_login` | Admin log in        |    POST |
+| `/car/<vendorId>/` | Post a car        |    POST |
+| `/cars` | Get all cars        |    GET |
+| `/cars/<carId>` | Get a single car        |    GET |
+| `/cars/<userId>/<carId>?token=<tokenvalue>` | Delete a car        |    DELETE |
+| `/cars/<userId>/<carId>?token=<tokenvalue>` | Update a car        |    PUT |
+| `/cars/<userId>/cars?token=<tokenvalue>` | Get vendor's cars        |    GET |
+| `/cars/<userId>/<carId>?token=<tokenvalue>` | Delete a car        |    DELETE |
+| `/cars/purchased_cars/<vendorId>?token=<tokenvalue>` | Get purchased cars        |    GET |
+| `/cart/<userId>/<carId>?token=<tokenvalue>` | Add an item to cart        |    POST |
+| `/cart/<userId>?token=<tokenvalue>` | Get cart items        |    GET |
+| `/cart/<userId>/<cartId>?token=<tokenvalue>` | Delete a single cart item        |    DELETE |
+| `/cart/<userId>/<carId>?token=<tokenvalue>` | Get a single cart item        |    GET |
+| `/cart/<userId>?token=<tokenvalue>` | Clear cart        |    DELETE |
+| `/checkout/<userId>?token=<tokenvalue>` | Complete purchase        |    PATCH |
+
 ### Features
 
 - [x] A user should be able to create an account.
@@ -52,4 +78,4 @@ A simple car classified API
 - [x] A vendor should be able to delete a car entry.
 - [x] A vendor should be able to update their profile.
 - [x] A vendor should be able to get their posted cars list.
-- [ ] A vendor should be able to get all purchased cars.
+- [x] A vendor should be able to get all purchased cars.
