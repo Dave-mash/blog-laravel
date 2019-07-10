@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 
+$env = env('APP_ENV') === 'local';
+
 return [
 
     /*
@@ -46,11 +48,11 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'carClassified'),
-            'username' => env('DB_USERNAME', 'default'),
-            'password' => env('DB_PASSWORD', 'password'),
+            'host' => $env ? env('DB_HOST') : env('ONLINE_DB_HOST'),
+            'port' => env('DB_PORT'),
+            'database' => $env ? env('DB_DATABASE') : env('ONLINE_DB_DATABASE'),
+            'username' => $env ? env('DB_USERNAME') : env('ONLINE_DB_USERNAME'),
+            'password' => $env ? env('DB_PASSWORD') : env('ONLINE_DB_PASSWORD'),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
