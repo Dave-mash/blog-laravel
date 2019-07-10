@@ -48,7 +48,7 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => 'sql2.freemysqlhosting.net',
+            'host' => 'localhost',
             'port' => env('DB_PORT'),
             'database' => $env ? env('DB_DATABASE') : env('ONLINE_DB_DATABASE'),
             'username' => $env ? env('DB_USERNAME') : env('ONLINE_DB_USERNAME'),
